@@ -1,0 +1,46 @@
+db.transactions.aggregate([{
+    $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+    }
+  },
+  { $unwind: "$user" },
+  {
+    $group: {
+      _id: "$user._id",
+      name: { $first: "$user.name" },
+      profession: { $first: "$user.profession" },
+      salary: { $first: "$user.salary" },
+      totalDeposits: {
+        $sum: {
+          $cond: {
+            if: { $eq: ["$type", "deposit"] },
+            then: "$amount",
+            else: 0
+          }
+        }
+      },
+      totalWithdrawals: {
+        $sum: {
+          $cond: {
+            if: { $eq: ["$type", "withdraw"] },
+            then: "$amount",
+            else: 0
+          }
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 1,
+      name: 1,
+      profession: 1,
+      salary: 1,
+      totalBankBalance: { $subtract: ["$totalDeposits", "$totalWithdrawals"] }
+    }
+  },
+  { $sort: { totalBankBalance: -1 } }
+])
