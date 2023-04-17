@@ -8,6 +8,7 @@ BlogRouter.post("/create", auth, async(req, res)=>{
         const {email, role}= req.payload;
         const newBlog = new BlogModel({authorName, body, email});
         await newBlog.save();
+        res.send({msg: "Blog posted"})
     } catch (error) {
         res.status(500).send({msg: error.messgae})
     }
